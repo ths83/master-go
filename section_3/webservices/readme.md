@@ -328,3 +328,97 @@ I added a few hints to the TODO comments, and remember that you always have the 
 available.
 
 Happy coding!
+
+# Part 4
+
+> NOTE: Cannot find files to complete the exercise.
+
+In the last part of this exercise, we will replace our overly simple storage map with a full-fledged, concurrency-safe
+key value store.
+
+## Bolt DB
+
+I chose BoldDB because of its simplicity and maturity. Bolt DB is used by many large projects, and is known for being
+fast, robust, and stable.
+
+So before diving into the assignment, let’s have a brief look at Bolt DB.
+
+### Storing and retrieving data
+
+Bolt DB is a key-value store. Key-value stores are like the big brother of maps, with persistent storage and some other
+goodies included. Basically, data is stored as key-value pairs, just like with maps, and in Bolt DB the key and the
+value both are byte slices.
+
+So in order to store a Quote struct in Bolt DB, we need to serialize it. For this purpose, we use a binary format called
+gob which is supported in the standard library by a package of the same name.
+
+gob uses encoders and decoders that pretty much work like JSON’s marshal and unmarshal operations but with binary data.
+
+```go
+enc := NewEncoder(aWriter)
+enc.Encode(someData)
+```
+
+gob has a very small API, and you can look into the examples within the package documentation to get familiar with how
+encoding and decoding works.
+
+### Buckets
+
+Data in Bolt DB is organized in so-called buckets. In each bucket, the keys must be unique. Buckets can exist
+side-by-side, and they can be nested. Think of a slice of maps, and a map of maps as an analogy.
+
+### Transactions
+
+Bolt DB supports transactions. Transactions ensure data consistency. You can run multiple database operations within a
+transaction, and if one of the operation fails, all previous operations within that transaction are rolled back, in
+order to restore the previous consistent state.
+
+Bolt DB provides three types of transactions, of which we need two: The Update transaction, and the View transaction.
+
+Both are designed as methods that take a function as a parameter; this is usually an anonymous function, or closure,
+declared right within the call. Within this closure, we start by creating or opening a bucket. Then we can use Put and
+Get to insert, update, and retrieve values to and from the bucket.
+
+To iterate over all keys in a bucket, use the ForEach method.
+
+Now with this brief intro to Bolt DB and gob in mind, lets turn to our task.
+
+## Your task
+
+For this final part I want to raise the bar a bit and give you only minimal instructions. Instead, I encourage you to
+dig into the documentation of the Bolt DB and gob packages and figure out on your own how things fit together. The task
+itself is not too difficult, but you will have to get familiar with two new API’s, so take a bit more time for this part
+than for the previous ones.
+
+Your task is to replace the map storage by Bolt DB. For this, I have moved the Quote struct to a separate package called
+quotes. In the file quote.go you will find the Quote struct along with two new methods that you shall implement:
+
+Serialize, and
+Deserialize.
+The former turns the quote it belongs to into a gob, and the latter turns a gob back into a quote.
+
+Then turn over to the file db.go. Here you find a struct called DB and a few functions and methods to implement:
+
+`Open()` shall take a path and return a new or existing database.
+`DB.Close()` shall close the open database.
+`DB.Create()` takes a quote and shall insert this quote into the database. It is an error to insert a quote that already
+exists.
+`DB.Get()` takes an author name and shall retrieve the corresponding quote.
+And finally `DB.List()` shall list all quotes that are stored in the database.
+You may optionally implement “update” and “delete” operations, too, but this is not part of this assignment.
+
+Finally, take main.go and adjust the import path to point to your local quotes package. main.go is already modified to
+use your new DB instead of the map, so you don’t have to do this text replacement tasks yourself.
+
+Test the database access now using a REST client. You can create new data via the client, or you can use the file
+“quotesdb”, which is a prefilled Bolt DB database so that you don’t need to start from scratch.
+
+This time I provide no walkthrough videos as the concepts used here should already be understood quite well from
+previous tasks, and the rest should be fairly close to the documentation.
+
+## Bonus task
+
+As a bonus task, extend the quotes package to allow storing multiple quotes per author. Here is one tip: Nested buckets
+might be useful here.
+
+Happy coding!
