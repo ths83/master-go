@@ -221,3 +221,110 @@ You can start from the source file that comes with this lecture.
 RESTful Web API Basics in Go - the blog article at appliedgo.net
 
 RESTful Web API Basics in Go - the video from the blog article on YouTube
+
+# Part 3
+
+In the third part of this exercise, we will implement a very simple data store and rewrite our handler functions to
+store and retrieve quotes to and from that store.
+
+That is, I write the simple data store, and you write the rest! :-P
+
+So let’s go!
+
+A quote usually includes a text, an author’s name, and optionally the source of the quote, like a book or an article in
+a magazine. We can pack all this into a struct.
+
+```go
+package main
+
+type Quote struct {
+	Author string
+	Text   string
+	Source string
+}
+```
+
+And for converting the data to and from JSON, we need to add field tags. Because I am lazy, I do this via the editor’s
+context menu. Now we just need to remove the omitempty tags for Author and Text, because those two fields are not
+optional.
+
+```go
+package main
+
+type Quote struct {
+	Author string `json:"author"`
+	Text   string `json:"text"`
+	Source string `json:"source,omitempty"`
+}
+```
+
+Now we can define a data store. But here is a caveat. We don’t want to create the data store as a global object, but on
+the other hand, we cannot pass it as an additional parameter to our handler functions, because the parameter list of a
+handler function cannot be changed.
+
+But there is a solution for that. Remember that methods are values and can take their receiver with them. We therefore
+can change all our handler functions into methods without touching the parameter list. And as the receiver of these
+methods, we create a struct named App that holds our data store.
+
+As already mentioned, the data store itself is very simple: It is just a map from string to *Quote. The key of the map
+is the author’s name, as we want to query for authors. This duplicates the author name, because it is already contained
+in the Quote struct, but we take this into account for easier JSON marshalling and unmarshalling.
+
+```go
+package main
+
+type App struct {
+	storage map[string]*Quote
+}
+```
+
+After turning the handler functions into methods…
+
+`func (app *App) handleQuote(w http.ResponseWriter, r *http.Request) { ... }`
+
+`func (app *App) handleQuotesList(w http.ResponseWriter, r *http.Request) { ... }`
+…we also need to instantiate the App object in the main function…
+
+```go
+package main
+
+func main() {
+	app := &App{
+		storage: map[string]*Quote{},
+	}
+	...
+```
+
+…and then modify the HandleFunc invocations slightly…
+
+`http.HandleFunc(prefix+"quote/", app.handleQuote)`
+`http.HandleFunc(prefix+"quotes/", app.handleQuotesList)`
+
+…and now the handlers have access to the App object and thus also to the data store.
+
+## Your task
+
+That was my part, and now here is your part.
+
+Implement handlers for:
+
+- Creating a quote,
+- Reading a quote, and
+- Listing all quotes.
+  For creating a quote, the client sends a POST request to the quote/ path, with a single quote encoded as a JSON object
+  in the request body:
+
+```go
+package main
+{
+"author": "Homer J. Simpson",
+"text": "D'oh!",
+"source": "The Simpsons"
+}
+```
+
+From the lecture about struct tag fields, you already know how to marshal and unmarshal JSON object from and to structs.
+I added a few hints to the TODO comments, and remember that you always have the package documentation at golang.org
+available.
+
+Happy coding!
