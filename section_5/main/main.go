@@ -11,15 +11,22 @@ func main() {
 }
 
 func Print(i interface{}) {
+	validateInterface(i)
 	t := reflect.TypeOf(i)
-	k := t.Kind()
-	if k == reflect.Invalid {
-		fmt.Errorf("given interface is invalid")
-	}
-	if k == reflect.Struct {
+	if t.Kind() == reflect.Struct {
 		printStructType(t)
 	} else {
 		printNonStructType(t)
+	}
+}
+
+func validateInterface(i interface{}) {
+	iv := reflect.ValueOf(i)
+	if !iv.IsValid() {
+		fmt.Errorf("given interface is invalid")
+	}
+	if iv.IsNil() {
+		fmt.Errorf("given interface is nil")
 	}
 }
 
