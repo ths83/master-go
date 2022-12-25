@@ -18,7 +18,8 @@ I think we can do better.
 
 ## Your tasks
 
-> NOTE: Great explanation [here](https://stackoverflow.com/a/39866671)
+> NOTE: Great explanation [here](https://stackoverflow.com/a/39866671) and
+> playground [here](https://go.dev/play/p/3kwe7ag1i1C)
 
 ### Task #1: Pretty-print a struct
 
